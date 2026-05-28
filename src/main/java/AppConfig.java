@@ -27,10 +27,24 @@ public class AppConfig {
     }
 
     public static AppConfig load(Path path) throws IOException {
-        Properties props = new Properties();
         try (InputStream in = Files.newInputStream(path)) {
-            props.load(in);
+            return load(in);
         }
+    }
+
+    public static AppConfig loadFromClasspath(String resourceName) throws IOException {
+        InputStream in = AppConfig.class.getClassLoader().getResourceAsStream(resourceName);
+        if (in == null) {
+            throw new IOException("Resource not found in classpath: " + resourceName);
+        }
+        try (InputStream closable = in) {
+            return load(closable);
+        }
+    }
+
+    private static AppConfig load(InputStream in) throws IOException {
+        Properties props = new Properties();
+        props.load(in);
 
         String mode = props.getProperty("mode", "training").trim();
         int setCount = Integer.parseInt(props.getProperty("set.count", "1"));

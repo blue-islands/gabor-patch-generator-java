@@ -9,7 +9,9 @@ public class Main {
     public static void main(String[] args) {
         try {
             Path configPath = parseConfigPath(args);
-            AppConfig cfg = AppConfig.load(configPath);
+            AppConfig cfg = (configPath == null)
+                    ? AppConfig.loadFromClasspath("config.properties")
+                    : AppConfig.load(configPath);
             Random random = cfg.seed == null ? new SecureRandom() : new Random(cfg.seed);
 
             GaborPatchGenerator patchGenerator = new GaborPatchGenerator();
@@ -21,23 +23,26 @@ public class Main {
                 throw new IllegalArgumentException("Unsupported mode: " + cfg.mode);
             }
 
-            System.out.println("Done. mode=" + cfg.mode + " config=" + configPath);
+            System.out.println("Done. mode=" + cfg.mode + " config=" + (configPath == null ? "classpath:config.properties" : configPath));
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
-            System.err.println("Usage: java -cp out Main --config config.properties");
+            System.err.println("Usage: java -jar target/gabor-patch-generator-java-1.0.0.jar [--config path/to/config.properties]");
             System.exit(1);
         }
     }
 
     private static Path parseConfigPath(String[] args) {
+        if (args.length == 0) {
+            return null;
+        }
         if (args.length == 2 && "--config".equals(args[0])) {
             return Path.of(args[1]);
         }
         if (args.length == 1 && ("--help".equals(args[0]) || "-h".equals(args[0]))) {
-            System.out.println("Usage: java -cp out Main --config config.properties");
+            System.out.println("Usage: java -jar target/gabor-patch-generator-java-1.0.0.jar [--config path/to/config.properties]");
             System.exit(0);
         }
-        throw new IllegalArgumentException("--config is required");
+        throw new IllegalArgumentException("Invalid arguments. Use --help for usage.");
     }
 
     static GaborPatchParams randomParams(Random random, int size) {
