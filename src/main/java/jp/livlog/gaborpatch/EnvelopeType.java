@@ -1,3 +1,5 @@
+package jp.livlog.gaborpatch;
+
 public enum EnvelopeType {
     GAUSSIAN,
     LINEAR,

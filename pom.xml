@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.example</groupId>
+    <groupId>jp.livlog</groupId>
     <artifactId>gabor-patch-generator-java</artifactId>
     <version>1.0.0</version>
 
@@ -22,7 +22,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>Main</mainClass>
+                            <mainClass>jp.livlog.gaborpatch.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -32,7 +32,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.5.0</version>
                 <configuration>
-                    <mainClass>Main</mainClass>
+                    <mainClass>jp.livlog.gaborpatch.Main</mainClass>
                 </configuration>
             </plugin>
         </plugins>

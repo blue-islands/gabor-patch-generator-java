@@ -1,3 +1,5 @@
+package jp.livlog.gaborpatch;
+
 import java.awt.Color;
 
 /**

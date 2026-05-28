@@ -1,3 +1,5 @@
+package jp.livlog.gaborpatch;
+
 import javax.imageio.ImageIO;
 import java.awt.BasicStroke;
 import java.awt.Color;

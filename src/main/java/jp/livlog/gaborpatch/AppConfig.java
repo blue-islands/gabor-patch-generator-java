@@ -1,3 +1,5 @@
+package jp.livlog.gaborpatch;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
