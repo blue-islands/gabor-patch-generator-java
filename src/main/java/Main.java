@@ -32,12 +32,8 @@ public class Main {
     }
 
     private static Path parseConfigPath(String[] args) {
-        if (args.length == 0) {
-            return null;
-        }
-        if (args.length == 2 && "--config".equals(args[0])) {
-            return Path.of(args[1]);
-        }
+        if (args.length == 0) return null;
+        if (args.length == 2 && "--config".equals(args[0])) return Path.of(args[1]);
         if (args.length == 1 && ("--help".equals(args[0]) || "-h".equals(args[0]))) {
             System.out.println("Usage: java -jar target/gabor-patch-generator-java-1.0.0.jar [--config path/to/config.properties]");
             System.exit(0);
@@ -47,15 +43,15 @@ public class Main {
 
     static GaborPatchParams randomParams(Random random, int size) {
         double orientation = random.nextDouble() * 180.0;
-        double freq = 0.02 + random.nextDouble() * 0.12;
+        double freq = 0.035 + random.nextDouble() * 0.045;
         double phase = random.nextDouble();
-        EnvelopeType envelope = EnvelopeType.random(random);
-        double std = Math.max(4.0, size * (0.10 + random.nextDouble() * 0.20));
-        double contrast = 0.4 + random.nextDouble() * 0.6;
+        EnvelopeType envelope = EnvelopeType.GAUSSIAN;
+        double std = size * (0.12 + random.nextDouble() * 0.10);
+        double contrast = 0.85 + random.nextDouble() * 0.15;
 
-        Color bg = randomPastel(random);
-        Color fg = randomColor(random);
-        Color stripe = randomColor(random);
+        Color bg = new Color(232, 232, 232);
+        Color fg = new Color(10, 10, 10);
+        Color stripe = new Color(250, 250, 250);
 
         return new GaborPatchParams(orientation, freq, phase, envelope, std, fg, stripe, bg, size, contrast);
     }
@@ -63,10 +59,9 @@ public class Main {
     private static void generateSingle(AppConfig cfg, Random random, GaborPatchGenerator generator) throws IOException {
         File dir = new File(cfg.outputDir, "single");
         ensureDir(dir);
+        int size = TrainingImageGenerator.autoCellSize(cfg.gridRows, cfg.gridCols);
         for (int i = 0; i < cfg.setCount; i++) {
-            GaborPatchParams p = randomParams(random, cfg.cellSize);
-            File out = new File(dir, String.format("gabor_%03d.png", i + 1));
-            generator.saveImage(p, out);
+            generator.saveImage(randomParams(random, size), new File(dir, String.format("gabor_%03d.png", i + 1)));
         }
     }
 
@@ -76,22 +71,11 @@ public class Main {
         TrainingImageGenerator training = new TrainingImageGenerator(generator);
         for (int i = 0; i < cfg.setCount; i++) {
             File setDir = new File(dir, String.format("set_%03d", i + 1));
-            training.generateMemoryPairSet(setDir, cfg.gridRows, cfg.gridCols, cfg.trainingImageCount, cfg.cellSize, random, cfg.seed, i + 1);
+            training.generateMemoryPairSet(setDir, cfg.gridRows, cfg.gridCols, random, cfg.seed, i + 1);
         }
     }
 
     private static void ensureDir(File dir) throws IOException {
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw new IOException("Failed to create output directory: " + dir.getAbsolutePath());
-        }
-    }
-
-    private static Color randomColor(Random random) {
-        return new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256));
-    }
-
-    private static Color randomPastel(Random random) {
-        int base = 180;
-        return new Color(base + random.nextInt(76), base + random.nextInt(76), base + random.nextInt(76));
+        if (!dir.exists() && !dir.mkdirs()) throw new IOException("Failed to create output directory: " + dir.getAbsolutePath());
     }
 }

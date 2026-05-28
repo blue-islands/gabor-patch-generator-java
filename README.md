@@ -1,63 +1,50 @@
 # gabor-patch-generator-java
 
-Java 17 向けのガボールパッチ画像生成ツールです。  
-**Jar実行**で、神経衰弱のような「2枚1組ペア探し」問題画像を生成できます。
+添付イメージのような、**グレースケールのガボールパッチ一覧画像**（神経衰弱向けペア配置）を生成する Java 17 ツールです。
 
-## 概要
-- `training` モード: 1枚の `puzzle.png` にガボールパッチをランダム配置
-- 各模様は **2枚1組** で出現（memory pair）
-- 配置枚数は `training.image.count` で指定（偶数必須）
-- `answer.json` に各ペアの正解位置を保存
-- `seed` 指定で再現可能（未指定なら毎回ランダム）
+## ポイント
+- カラフル出力ではなく、黒〜白 + 明るいグレー背景で生成
+- `training` モードは **rows × cols の全セル**を使用
+- **指定するのは縦横数のみ**（`grid.rows`, `grid.cols`）
+- パッチサイズは自動計算（画像全体サイズに収まるように調整）
+- Jar に `config.properties` を梱包済み
 
-## プロパティファイルについて
-- デフォルト設定ファイル `config.properties` は **Jar に梱包**されます（`src/main/resources/config.properties`）。
-- 引数なしで実行した場合、Jar内の `config.properties` を読み込みます。
-- `--config` を指定した場合は外部ファイルを優先します。
-
-## ビルド（Jar作成）
+## ビルド
 ```bash
 mvn package
 ```
-
-生成物:
-- `target/gabor-patch-generator-java-1.0.0.jar`
+- `output/training/set_001` 〜 `set_005` を生成
+- 各セットに `puzzle.png` と `answer.json` を出力
 
 ## 実行
-### 1) Jar内の設定で実行
+### 同梱設定で実行
 ```bash
 java -jar target/gabor-patch-generator-java-1.0.0.jar
 ```
 
-### 2) 外部プロパティを指定して実行
+### 外部設定で実行
 ```bash
 java -jar target/gabor-patch-generator-java-1.0.0.jar --config /path/to/config.properties
 ```
 
-## 設定ファイル（config.properties）
-主な項目:
-- `mode=training|single`
-- `set.count=2` （training ならセット数、single なら出力枚数）
-- `output.dir=output`
-- `seed=12345` （空欄ならランダム）
-- `cell.size=128`
-- `grid.rows=4`
-- `grid.cols=4`
-- `training.image.count=12` （偶数、かつ `grid.rows*grid.cols` 以下）
+## config.properties
+```properties
+mode=training
+set.count=1
+output.dir=output
+seed=
+grid.rows=7
+grid.cols=11
+```
 
-## 出力例
+- `training` モードでは `grid.rows * grid.cols` は偶数にしてください（2枚1組のため）。
+
+## 出力
 ```text
 output/
   training/
     set_001/
       puzzle.png
       answer.json
-      patch_001.png
-      patch_002.png
-      ...
+      patch_001.png ...
 ```
-- `output/training/set_001` 〜 `set_005` を生成
-- 各セットに `puzzle.png` と `answer.json` を出力
-
-## 補足
-このツールは視覚トレーニング用・研究用・実験用の画像生成を目的としています。

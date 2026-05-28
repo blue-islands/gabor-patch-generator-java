@@ -23,17 +23,15 @@ public class TrainingImageGenerator {
         this.patchGenerator = patchGenerator;
     }
 
-    public void generateMemoryPairSet(File setDir, int rows, int cols, int imageCount, int cellSize,
-                                      Random random, Long seed, int setIndex) throws IOException {
-        if (!setDir.exists() && !setDir.mkdirs()) {
-            throw new IOException("Failed to create directory: " + setDir.getAbsolutePath());
-        }
+    public void generateMemoryPairSet(File setDir, int rows, int cols, Random random, Long seed, int setIndex) throws IOException {
+        if (!setDir.exists() && !setDir.mkdirs()) throw new IOException("Failed to create directory: " + setDir.getAbsolutePath());
 
+        int imageCount = rows * cols;
+        int cellSize = autoCellSize(rows, cols);
         int pairCount = imageCount / 2;
+
         List<GaborPatchParams> pairs = new ArrayList<>();
-        for (int i = 0; i < pairCount; i++) {
-            pairs.add(Main.randomParams(random, cellSize));
-        }
+        for (int i = 0; i < pairCount; i++) pairs.add(Main.randomParams(random, cellSize));
 
         List<GaborPatchParams> placed = new ArrayList<>();
         List<Integer> pairIds = new ArrayList<>();
@@ -43,7 +41,6 @@ public class TrainingImageGenerator {
             pairIds.add(i);
             pairIds.add(i);
         }
-
         shuffleInSync(placed, pairIds, random);
 
         List<BufferedImage> images = new ArrayList<>();
@@ -53,11 +50,21 @@ public class TrainingImageGenerator {
             ImageIO.write(img, "png", new File(setDir, String.format("patch_%03d.png", i + 1)));
         }
 
-        BufferedImage puzzle = composeGrid(images, rows, cols, cellSize);
-        ImageIO.write(puzzle, "png", new File(setDir, "puzzle.png"));
-
+        ImageIO.write(composeGrid(images, rows, cols, cellSize), "png", new File(setDir, "puzzle.png"));
         Files.writeString(new File(setDir, "answer.json").toPath(),
-                buildAnswerJson(seed, setIndex, rows, cols, imageCount, pairIds, placed), StandardCharsets.UTF_8);
+                buildAnswerJson(seed, setIndex, rows, cols, imageCount, cellSize, pairIds, placed),
+                StandardCharsets.UTF_8);
+    }
+
+    public static int autoCellSize(int rows, int cols) {
+        int margin = 16;
+        int gap = 10;
+        int targetWidth = 1280;
+        int targetHeight = 760;
+        int maxByWidth = (targetWidth - margin * 2 - gap * (cols - 1)) / cols;
+        int maxByHeight = (targetHeight - margin * 2 - gap * (rows - 1)) / rows;
+        int size = Math.min(maxByWidth, maxByHeight);
+        return Math.max(56, Math.min(size, 140));
     }
 
     private static void shuffleInSync(List<GaborPatchParams> params, List<Integer> pairIds, Random random) {
@@ -77,38 +84,29 @@ public class TrainingImageGenerator {
         BufferedImage canvas = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = canvas.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setColor(new Color(235, 235, 235));
+        g.setColor(new Color(232, 232, 232));
         g.fillRect(0, 0, width, height);
-        g.setFont(new Font("SansSerif", Font.BOLD, 14));
-        g.setStroke(new BasicStroke(2f));
+        g.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        g.setStroke(new BasicStroke(1f));
 
-        for (int i = 0; i < rows * cols; i++) {
+        for (int i = 0; i < images.size(); i++) {
             int r = i / cols;
             int c = i % cols;
             int x = margin + c * (cellSize + gap);
             int y = margin + r * (cellSize + gap);
-
-            if (i < images.size()) {
-                g.drawImage(images.get(i), x, y, null);
-            } else {
-                g.setColor(new Color(210, 210, 210));
-                g.fillRect(x, y, cellSize, cellSize);
-            }
-            g.setColor(new Color(90, 90, 90));
+            g.drawImage(images.get(i), x, y, null);
+            g.setColor(new Color(170, 170, 170));
             g.drawRect(x, y, cellSize, cellSize);
-            g.drawString(String.valueOf(i), x + 4, y + 16);
+            g.drawString(String.valueOf(i), x + 4, y + 14);
         }
-
         g.dispose();
         return canvas;
     }
 
-    private static String buildAnswerJson(Long seed, int setIndex, int rows, int cols, int imageCount,
+    private static String buildAnswerJson(Long seed, int setIndex, int rows, int cols, int imageCount, int cellSize,
                                           List<Integer> pairIds, List<GaborPatchParams> params) {
         Map<Integer, List<Integer>> pairPositions = new HashMap<>();
-        for (int i = 0; i < pairIds.size(); i++) {
-            pairPositions.computeIfAbsent(pairIds.get(i), k -> new ArrayList<>()).add(i);
-        }
+        for (int i = 0; i < pairIds.size(); i++) pairPositions.computeIfAbsent(pairIds.get(i), k -> new ArrayList<>()).add(i);
 
         StringBuilder sb = new StringBuilder();
         sb.append("{\n");
@@ -118,6 +116,7 @@ public class TrainingImageGenerator {
         sb.append("  \"rows\": ").append(rows).append(",\n");
         sb.append("  \"cols\": ").append(cols).append(",\n");
         sb.append("  \"imageCount\": ").append(imageCount).append(",\n");
+        sb.append("  \"cellSize\": ").append(cellSize).append(",\n");
         sb.append("  \"pairs\": [\n");
 
         List<Integer> keys = new ArrayList<>(pairPositions.keySet());
@@ -125,8 +124,7 @@ public class TrainingImageGenerator {
         for (int i = 0; i < keys.size(); i++) {
             int id = keys.get(i);
             List<Integer> pos = pairPositions.get(id);
-            sb.append("    {\"pairId\": ").append(id).append(", \"positions\": [")
-                    .append(pos.get(0)).append(", ").append(pos.get(1)).append("]}");
+            sb.append("    {\"pairId\": ").append(id).append(", \"positions\": [").append(pos.get(0)).append(", ").append(pos.get(1)).append("]}");
             sb.append(i == keys.size() - 1 ? "\n" : ",\n");
         }
         sb.append("  ],\n");
@@ -144,8 +142,7 @@ public class TrainingImageGenerator {
                     .append("}");
             sb.append(i == params.size() - 1 ? "\n" : ",\n");
         }
-        sb.append("  ]\n");
-        sb.append("}\n");
+        sb.append("  ]\n}");
         return sb.toString();
     }
 
@@ -154,9 +151,7 @@ public class TrainingImageGenerator {
     }
 
     private static GaborPatchParams cloneParams(GaborPatchParams p) {
-        return new GaborPatchParams(
-                p.orientationDeg, p.frequency, p.phase, p.envelopeType, p.standardDeviation,
-                p.foregroundColor, p.stripeColor, p.backgroundColor, p.size, p.contrast
-        );
+        return new GaborPatchParams(p.orientationDeg, p.frequency, p.phase, p.envelopeType, p.standardDeviation,
+                p.foregroundColor, p.stripeColor, p.backgroundColor, p.size, p.contrast);
     }
 }
