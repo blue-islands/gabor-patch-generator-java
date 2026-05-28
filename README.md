@@ -13,6 +13,8 @@
 ```bash
 mvn package
 ```
+- `output/training/set_001` 〜 `set_005` を生成
+- 各セットに `puzzle.png` と `answer.json` を出力
 
 ## 実行
 ### 同梱設定で実行
