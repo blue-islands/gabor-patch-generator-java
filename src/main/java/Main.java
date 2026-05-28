@@ -76,8 +76,7 @@ public class Main {
         TrainingImageGenerator training = new TrainingImageGenerator(generator);
         for (int i = 0; i < cfg.setCount; i++) {
             String ts = LocalDateTime.now().format(TS_FORMAT);
-            File setDir = new File(dir, String.format("set_%03d_%s", i + 1, ts));
-            training.generateMemoryPairSet(setDir, cfg.gridRows, cfg.gridCols, random, cfg.seed, i + 1, ts);
+            training.generateMemoryPairSet(dir, cfg.gridRows, cfg.gridCols, random, cfg.seed, i + 1, ts);
         }
     }
 

@@ -23,8 +23,8 @@ public class TrainingImageGenerator {
         this.patchGenerator = patchGenerator;
     }
 
-    public void generateMemoryPairSet(File setDir, int rows, int cols, Random random, Long seed, int setIndex, String timestamp) throws IOException {
-        if (!setDir.exists() && !setDir.mkdirs()) throw new IOException("Failed to create directory: " + setDir.getAbsolutePath());
+    public void generateMemoryPairSet(File trainingDir, int rows, int cols, Random random, Long seed, int setIndex, String timestamp) throws IOException {
+        if (!trainingDir.exists() && !trainingDir.mkdirs()) throw new IOException("Failed to create directory: " + trainingDir.getAbsolutePath());
 
         int imageCount = rows * cols;
         int cellSize = autoCellSize(rows, cols);
@@ -43,7 +43,7 @@ public class TrainingImageGenerator {
         }
         shuffleInSync(placed, pairIds, random);
 
-        File workDir = new File(setDir, "work");
+        File workDir = new File(trainingDir, "work");
         if (!workDir.exists() && !workDir.mkdirs()) throw new IOException("Failed to create work directory: " + workDir.getAbsolutePath());
 
         List<BufferedImage> images = new ArrayList<>();
@@ -53,8 +53,8 @@ public class TrainingImageGenerator {
             ImageIO.write(img, "png", new File(workDir, String.format("patch_%03d.png", i + 1)));
         }
 
-        ImageIO.write(composeGrid(images, rows, cols, cellSize), "png", new File(setDir, "puzzle_" + timestamp + ".png"));
-        Files.writeString(new File(setDir, "answer_" + timestamp + ".json").toPath(),
+        ImageIO.write(composeGrid(images, rows, cols, cellSize), "png", new File(trainingDir, "puzzle_" + timestamp + ".png"));
+        Files.writeString(new File(trainingDir, "answer_" + timestamp + ".json").toPath(),
                 buildAnswerJson(seed, setIndex, rows, cols, imageCount, cellSize, pairIds, placed),
                 StandardCharsets.UTF_8);
 
