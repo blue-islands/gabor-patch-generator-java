@@ -3,9 +3,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Random;
 
 public class Main {
+    private static final DateTimeFormatter TS_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+
     public static void main(String[] args) {
         try {
             Path configPath = parseConfigPath(args);
@@ -61,7 +65,8 @@ public class Main {
         ensureDir(dir);
         int size = TrainingImageGenerator.autoCellSize(cfg.gridRows, cfg.gridCols);
         for (int i = 0; i < cfg.setCount; i++) {
-            generator.saveImage(randomParams(random, size), new File(dir, String.format("gabor_%03d.png", i + 1)));
+            String ts = LocalDateTime.now().format(TS_FORMAT);
+            generator.saveImage(randomParams(random, size), new File(dir, String.format("gabor_%s_%03d.png", ts, i + 1)));
         }
     }
 
@@ -70,8 +75,9 @@ public class Main {
         ensureDir(dir);
         TrainingImageGenerator training = new TrainingImageGenerator(generator);
         for (int i = 0; i < cfg.setCount; i++) {
-            File setDir = new File(dir, String.format("set_%03d", i + 1));
-            training.generateMemoryPairSet(setDir, cfg.gridRows, cfg.gridCols, random, cfg.seed, i + 1);
+            String ts = LocalDateTime.now().format(TS_FORMAT);
+            File setDir = new File(dir, String.format("set_%03d_%s", i + 1, ts));
+            training.generateMemoryPairSet(setDir, cfg.gridRows, cfg.gridCols, random, cfg.seed, i + 1, ts);
         }
     }
 

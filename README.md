@@ -44,7 +44,7 @@ grid.cols=11
 output/
   training/
     set_001/
-      puzzle.png
-      answer.json
-      patch_001.png ...
+      puzzle_yyyymmddhhss.png
+      answer_yyyymmddhhss.json
+      (work/ は自動削除)
 ```

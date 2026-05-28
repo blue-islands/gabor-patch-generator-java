@@ -23,7 +23,7 @@ public class TrainingImageGenerator {
         this.patchGenerator = patchGenerator;
     }
 
-    public void generateMemoryPairSet(File setDir, int rows, int cols, Random random, Long seed, int setIndex) throws IOException {
+    public void generateMemoryPairSet(File setDir, int rows, int cols, Random random, Long seed, int setIndex, String timestamp) throws IOException {
         if (!setDir.exists() && !setDir.mkdirs()) throw new IOException("Failed to create directory: " + setDir.getAbsolutePath());
 
         int imageCount = rows * cols;
@@ -43,17 +43,22 @@ public class TrainingImageGenerator {
         }
         shuffleInSync(placed, pairIds, random);
 
+        File workDir = new File(setDir, "work");
+        if (!workDir.exists() && !workDir.mkdirs()) throw new IOException("Failed to create work directory: " + workDir.getAbsolutePath());
+
         List<BufferedImage> images = new ArrayList<>();
         for (int i = 0; i < placed.size(); i++) {
             BufferedImage img = patchGenerator.generateImage(placed.get(i));
             images.add(img);
-            ImageIO.write(img, "png", new File(setDir, String.format("patch_%03d.png", i + 1)));
+            ImageIO.write(img, "png", new File(workDir, String.format("patch_%03d.png", i + 1)));
         }
 
-        ImageIO.write(composeGrid(images, rows, cols, cellSize), "png", new File(setDir, "puzzle.png"));
-        Files.writeString(new File(setDir, "answer.json").toPath(),
+        ImageIO.write(composeGrid(images, rows, cols, cellSize), "png", new File(setDir, "puzzle_" + timestamp + ".png"));
+        Files.writeString(new File(setDir, "answer_" + timestamp + ".json").toPath(),
                 buildAnswerJson(seed, setIndex, rows, cols, imageCount, cellSize, pairIds, placed),
                 StandardCharsets.UTF_8);
+
+        deleteDirectoryRecursively(workDir);
     }
 
     public static int autoCellSize(int rows, int cols) {
@@ -144,6 +149,22 @@ public class TrainingImageGenerator {
         }
         sb.append("  ]\n}");
         return sb.toString();
+    }
+
+    private static void deleteDirectoryRecursively(File dir) throws IOException {
+        File[] children = dir.listFiles();
+        if (children != null) {
+            for (File child : children) {
+                if (child.isDirectory()) {
+                    deleteDirectoryRecursively(child);
+                } else if (!child.delete()) {
+                    throw new IOException("Failed to delete work file: " + child.getAbsolutePath());
+                }
+            }
+        }
+        if (!dir.delete()) {
+            throw new IOException("Failed to delete work directory: " + dir.getAbsolutePath());
+        }
     }
 
     private static String format(double value) {
