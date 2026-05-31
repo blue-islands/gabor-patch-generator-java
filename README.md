@@ -94,6 +94,10 @@ output/
 4. 答え合わせやアプリ実装では、`answer_*.json` の `pairId` を利用します。
 5. 目が疲れないよう、短時間で区切って遊ぶことをおすすめします。
 
+### ライセンス
+
+このプロジェクトは [MIT License](LICENSE) の下で公開されています。商用・非商用を問わず、ライセンス条件に従って利用、複製、変更、配布できます。
+
 ---
 
 ## English
@@ -186,3 +190,7 @@ output/
 3. To make a game, hide the patches as cards and let players flip two cards at a time, like a memory matching game.
 4. Use `pairId` in `answer_*.json` to check answers or implement game logic.
 5. Keep sessions short and take breaks to avoid eye fatigue.
+
+### License
+
+This project is released under the [MIT License](LICENSE). You may use, copy, modify, and distribute it for commercial or non-commercial purposes as long as you comply with the license terms.
